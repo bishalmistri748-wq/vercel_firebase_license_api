@@ -32,7 +32,7 @@ def check(k, app_id, device_id):
     if lic.get('revoked') is True: return False,'revoked',lic
     if int(lic.get('expires_at',0) or 0) and now_ms() >= int(lic['expires_at']): return False,'expired',lic
     if str(lic.get('app_id','') or '') and lic.get('app_id') != app_id: return False,'app_mismatch',lic
-    devices=lic.get('devices') or {}; limit=int(lic.get('max_devices',1) or 1)
+    devices=lic.get('devices') or {}; limit=int(lic.get('max_devices', 1))
     if device_id not in devices:
         if limit != 0 and len(devices) >= limit: return False,'device_limit',lic
         devices[device_id]={'bound_at':now_ms()}
@@ -51,8 +51,15 @@ def verify():
 @app.post('/admin/create-key')
 def create_key():
     if not auth(): return jsonify(ok=False,error='unauthorized'),401
-    d=request.get_json(silent=True) or {}; days=int(d.get('days',30)); limit=int(d.get('max_devices',1)); app_id=str(d.get('app_id','') or '').strip()
-    if days<1 or limit<0: return jsonify(ok=False,error='invalid parameters'),400
+    d=request.get_json(silent=True) or {}
+    try:
+        days = int(d.get('days', 30))
+        limit = int(d.get('max_devices', 1))
+    except (TypeError, ValueError):
+        return jsonify(ok=False, error='days and max_devices must be integers'), 400
+    app_id = str(d.get('app_id', '') or '').strip()
+    if days < 1 or limit < 0:
+        return jsonify(ok=False, error='invalid parameters'), 400
     k=newkey(); created=now_ms(); rec={'app_id':app_id,'created_at':created,'expires_at':created+days*86400000,'max_devices':limit,'revoked':False,'devices':{}}
     db.reference(f'licenses/{kid(k)}').set(rec)
     return jsonify(ok=True,license_key=k,**rec),201
@@ -90,5 +97,14 @@ def list_keys():
     if not auth(): return jsonify(ok=False,error='unauthorized'),401
     data=db.reference('licenses').get() or {}
     return jsonify(ok=True,count=len(data),licenses=[dict(v or {},id=k) for k,v in data.items()])
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    return jsonify(ok=False, error='method_not_allowed', allowed=list(e.valid_methods or [])), 405
+
+@app.errorhandler(404)
+def not_found(e):
+    return jsonify(ok=False, error='not_found'), 404
+
 
 application=app
