@@ -6,26 +6,29 @@ from firebase_admin import credentials, db
 
 app = Flask(__name__)
 
-# ── Config from environment ───────────────────────────────────────────────────
-DATABASE_URL   = os.environ.get('FIREBASE_DATABASE_URL', 'https://gfxtool-bb32f-default-rtdb.firebaseio.com/').rstrip('/')
-ADMIN_SECRET   = os.environ.get('ADMIN_SECRET', 'sz7rEmsBrld9RSzRPl4MkFNom17xIpSC_k9skhehDz6v-gyaGdLN-0SfPc42mzclCuOeJaqDiefQ8vEziaZf97nHifbF_d31O2RaKpWAncJKdCscrxQ_nX03cInsuUdyRv1Hxgh3N78iUtwAFu7qlc9IemgAo_D4-3HFvJ89trUlMHJMq3ksqw4sXTLv8dIGHC-iIxpz6MTY6nb4rz65LE6VtOsTBWGFAPMvQ9vEjb4k0xqKKNy3y5I7I4XSiuSagwek8Czl1WlsdycvAKS4cdhr1l5MPqq5XB3V-26_k2MTMhJgHOGJPc1qx6Jz-kZsb28mpVnxKmBkdP8r9KoUklGvS9CKDgV5YxgQGAg0m-HywlTCAOap59LjV7Z6285Pu_I09C7PmZVlo-pBCIzqt31BzfblAH47X2bWJWibDDbnhwia4F-Jd0MioyjLEuVllci1y5IPH-16309QpjQkIKbufhrIoXcI1PQDsc801m1GpWfnoNC6naJw6tRCFkgOpi1tUUvpEy7_gUhqMyR9bA').strip()
+# ── Config ────────────────────────────────────────────────────────────────────
+DATABASE_URL   = 'https://gfxtool-bb32f-default-rtdb.firebaseio.com'
+ADMIN_SECRET   = os.environ.get('ADMIN_SECRET', 'SlFVoNDazRPb3A0n1DvWmXuEdcfoIfiMOjL7diW-hVLR-u4DC9MgqkpVK8JSN2NyUrvYVBC-wviN5D6KBoIzlwRvsw4VC9hYR9yi2V6yPzUV4sHhClDRqPVufwqivGXGEUxX9gY74ZxS9m1jSrNq9jP_PWzJwecJox0BeGBS9DA3yuwuVzTG5XLqI2r6pXEaY4CgNNbhz0jkpoKVzWiwnEhAbgFhTVHpaafmXJo1Ipx0PIVklKZdmjVf1t1Pgt-IaYC1ZVq394JxmT6uKTjGdd1Cm7RqOvJyEYNtlx5MfoRglVBJTbIRpSVGUN7cL-bfhGKNR3tarOSZI4eM9EL9rQ').strip()
 BOT_API_SECRET = os.environ.get('BOT_API_SECRET', 'oSoUSURijE1-DC05Au8Z1sJiePeSzdgpua3Ca-I3UW_-LVlAGxJz-eRAABYFEUB6').strip()
 
-# Firebase credentials
-# FIREBASE_SERVICE_ACCOUNT_JSON environment variable takes priority.
-_SA_JSON = os.environ.get('FIREBASE_SERVICE_ACCOUNT_JSON', '').strip()
-
-if _SA_JSON:
-    try:
-        FIREBASE_SERVICE_ACCOUNT_JSON = json.loads(_SA_JSON)
-    except Exception as e:
-        raise RuntimeError('Invalid FIREBASE_SERVICE_ACCOUNT_JSON') from e
-else:
-    FIREBASE_SERVICE_ACCOUNT_JSON = {'type': 'service_account', 'project_id': 'gfxtool-bb32f', 'private_key_id': '440af8a6f85d7dd4d2af263339e60ca55fe3aa31', 'private_key': '-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC12YN8iMCAytkk\nwmoypMBJhko50yU9DogYbW/Gyt82L7xhIWlS6d3FKSTe2H+nLyorgthOKy7TCr2q\nqCy24KQGeqE/vwnKWqq/G38aDlsmA2O916ODpYMnqYl3KvzCIRdsBbtJEh/9dXiH\n2Icdh4h1kS0Y0ot4P74/uK1xb69LKUYtTbQA5h2cuOcoVJK+vAAWDMd57cAat76o\n5PfJN34rWMFTfOrhFP0N+W2GsR2oYFr40hDwNkkljUXnW3TeaP2Bz7Q3y3oAzvMe\nsEUB9HmquFLtSNecSVorxqw7UOaO+VVb5OxNcZUx3e1SZ26v/Yp7ogrpNx9MQTsF\n4nJagOq5AgMBAAECggEAD3k1K30VaEAabvrN/4YuSHNRUI9LXWElqnJxbuhnStyP\n+nHV3PTCZprkJMQmRIsKWw50ql4ZS2LgFavetibyPgzkOKDgS+QgIEfOLmDnV5o1\nO/uj0bldKhxOcqHpRPl83Te1oneU2kPLIEAH6zbToTFbtX+A15gQ76oetAbNUydI\nsLw68hP4bSvmSy+1WuThm0KlDzgwrYlGLOOKXXV25s4CS9WbgrlOt2/J98+9U4Lf\nB+zPimacfLNkfWC9PKNO1YXZZttGhhDW8CYUWDWPylOGvPsaRKMdO9CVxkbjt5x+\nEUoTcy7cwMPo60T9JK64l/XBTF4GXyHJzKXWe2vokwKBgQDfB4BkyHbVaWewwRkG\n1eME8SE71cRUoYeaHB5miEG6yzv7MqGC+ErQvYOkWjTvfB7evRGcGemdk5slp9ny\nOdUfmTFmfjdcod55XhLxBMwcYtdaZW/3VQvyxg4gaTElmOWKVgLtFKA07CsWA57b\n0sKwUnm7NRhKkxahNCWVsdWGOwKBgQDQu5O1/e4fZ9e+jyvpzrc3adxbyh2I3cuY\nzT31rNlgS8G8YVxXtkEqpoMsDX0F+Ee0KEtlMjK86JnE8yET2iYgqkSyXc1vXjAr\n2U/KpSKsBCyrG7iAEb2gvQVvqcmKclxXO5Zas9to37tZK5O9Ivf/wA98ni9ekxor\nWOGmf+6fmwKBgQCknXDS8nNjiW0TNTM3rF7nouKYu2sx3BeuU9rMav241ZDsE67K\ncGEoOPkVMc+og8B1Pq/ku+uGdxAodv+SncUEkZm4wKg0IvWGNz1bz+KngPzap8xA\njfFHu49ptLqluXiS5nE6c+LbrQUQNpPmRGWWpwlaeBH52R721Pp4xs2HSQKBgQDD\nyf7eqaZPfRcoXqFBOa4v4zNYQfh8JhdQZ8wjgpOPuN+rtONqPsFXoULO8oQAMogH\nm/hEntZqzf9Wdvvi5C/5Wd0ANe559S5YIwmuOkGQeoXvphvkvT9S45qSx/8MxwKI\nrJL211gKQjo4hSCaO4/GLEAak0I5gt/8Iu3eQIfy2wKBgQCC3IjFaobn6b55DSV/\nmuOsx8NgS36GpXxA9I5LGr1M6IPAAfhafXS9CAjAHCrbvnp9naSB+tYLAPSuhw4g\noOO/VRPb7FpO+xc8KAyqw9RPlqLbLlitxNhIxDDk7f9h51N+iSDfB2rN9EKuk2Wn\nwnPOQslFpD6G4g5EY6VgIHbwYg==\n-----END PRIVATE KEY-----\n', 'client_email': 'firebase-adminsdk-70hn7@gfxtool-bb32f.iam.gserviceaccount.com', 'client_id': '113521204726986896638', 'auth_uri': 'https://accounts.google.com/o/oauth2/auth', 'token_uri': 'https://oauth2.googleapis.com/token', 'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs', 'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-70hn7%40gfxtool-bb32f.iam.gserviceaccount.com', 'universe_domain': 'googleapis.com'}
+# ── Firebase Service Account ──────────────────────────────────────────────────
+FIREBASE_SA = {
+    "type": "service_account",
+    "project_id": "gfxtool-bb32f",
+    "private_key_id": "063b8bf0f6652c70c745ef33bc98bc569864fc90",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCnmb4s9Q+c3yrb\n7vX/4YQFlNthVCnio+h3ocJJ4NrM5I9wASoVdHsjrPexKmiaFkUC0afN7g74pocZ\nDk4k+JFHBPpZzzUlu8plaU+XhS9e8wSECgIFrX4NKeUMm8eXS+7nSKqKUthAzLr0\np3N56US9ZeQGJPW6mQgDsH1S+SvnjOCMQAudt/81AYHl007qoJ6CHpvw0xneEXel\n8JhG7wmOFePNcN2Ax3jQRWQ48ydt7ahGBv6Yi4t3UYf3gjIQxvGsaFnBD19rDQu7\n7C3D4aSO9AmAXUMVUu6LwHo7PF/szIWuZXfMDcd/uvs9ZkNRQ0C+U12jjLUqF2pH\nK/bZcs33AgMBAAECggEAASiKm4NfesX/DALKXNHGSUxI9A1BpYyqjNOOg5nxSpXv\nCZkjl6uWKnchk6W4K+GB9PITDeAuCAyHpGuPaal7A2TR2UWUDIur/BefXwfEL/aC\nBeq7cV4U0hRiOKBZQ9fpYSSKeTThM6nM1uexuWhUHIOyovn5YB0LWZIicSyg6uFg\nTEgusNlFjVUbcGcjCCW6PGyGIT2bbEai0xAylUycs+9avTaNQnQGg9vo740lckJL\nBv5l7pSZV9QQBfyR1ZgeqBTYzVTe3VA/nJBGzCkTkY/6CUn1bjdYX0CdRENw1/26\nikg2X3wjI4avkmkUSELfkwjkdsQaRTeVZXZY6g5YEQKBgQDZtdV2d4hPTx4jIZl0\n7vZjuXQXOAhw5YRnk1z5wgLSsNA1d6vcP6sga8sRVPx/WN/WwrQsaj3BNEI+wfIq\nAN6ZiQlXJ3oPYB2JxxgQLNO6KNDmyqW1TsEZJYe1CNRvT+wPasHZaQ+yGoQJeziR\nt1A77k6LvhsvEh6tZHZCIEBAQwKBgQDFE8YImXRDuxpSQ/llng44lcOQjTNbx6q2\n8duSXqaS2cyySjpX64KDNuzgJRWYWQW4Nn1M4p1AtRHTuSJwgJ/owjIh2qP+ptXr\npvJbdpdVLPFhls6ji/FV0sSKzqIw0sLSW3FRAX5xlh2N6enTPurOXKffs+EWq+8B\nGTW22r2qPQKBgADkwyyKTw/sRjZks+mL9YzxPO2/eCFmf8WhEDeiOTq+KQyfIiB0\nTnKCnsHCdIrdRYXvJKguA3TgjwkM6L6NZFyC+HvYGKMphNWE8K9YT8Iq2rinykhV\nO2usAMOYdq7CSDjD+mm3Ca50d2hGjjPi6bxlPQNL03a8/0085VNeKIVbAoGBALNE\nH1lnLQkHQxQd3NiAg3MZWAE/T75my3UKX66vBlqCX962AohDJD7zUVk6ooAoSjmc\n5zFu2ZgonQS4XQl1FwCE1VFSLubPH7vx6nckUtgZv6ADrAe8nlRxGnMhLwu2S51J\nrLQA5eGwqUWTxyxvCOuaAOJOH6udzhRzuBaStwAJAoGAEk+LfuslmpKBSC+9m6Gr\nWl6/uPjxMwphU/yBtd3zDlG4Uwx0DTLmLvRuSaoXbbAPLiABhB7eanhHyOdzKvZM\ncXxBZmA5SJ3BWx8HTq83fnwicJyc08qqRrJgYlgyCqsDxVdSQBuc3Olj8j/KX4l8\nOrTkNV11ZYtR/oCWf2fw25Q=\n-----END PRIVATE KEY-----\n",
+    "client_email": "firebase-adminsdk-70hn7@gfxtool-bb32f.iam.gserviceaccount.com",
+    "client_id": "113521204726986896638",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-70hn7%40gfxtool-bb32f.iam.gserviceaccount.com",
+    "universe_domain": "googleapis.com"
+}
 
 if not firebase_admin._apps:
     firebase_admin.initialize_app(
-        credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_JSON),
+        credentials.Certificate(FIREBASE_SA),
         {'databaseURL': DATABASE_URL}
     )
 
@@ -37,67 +40,68 @@ def clean(k):
     return str(k or '').strip().upper()
 
 def kid(k):
-    """Firebase key ID — sha256 of the cleaned license key."""
     return hashlib.sha256(clean(k).encode()).hexdigest()
 
 def auth_admin():
-    """Verify x-admin-secret header."""
     if not ADMIN_SECRET:
         return False
-    return hmac.compare_digest(
-        request.headers.get('x-admin-secret', ''), ADMIN_SECRET
-    )
+    return hmac.compare_digest(request.headers.get('x-admin-secret', ''), ADMIN_SECRET)
 
 def auth_bot():
-    """Verify x-bot-secret header (for user-facing endpoints)."""
-    if not BOT_API_SECRET:
-        return False
-    return hmac.compare_digest(
-        request.headers.get('x-bot-secret', ''), BOT_API_SECRET
-    )
+    # Agar BOT_API_SECRET set nahi toh admin secret se bhi allow karo
+    if BOT_API_SECRET:
+        return hmac.compare_digest(request.headers.get('x-bot-secret', ''), BOT_API_SECRET)
+    # Fallback: admin secret se bhi bot endpoints kaam karein
+    return auth_admin()
 
-def auth_any():
-    """Accept either admin or bot secret."""
-    return auth_admin() or auth_bot()
-
-def get_license(k):
+def get_lic(k):
     return db.reference(f'licenses/{kid(k)}').get()
 
 def newkey():
-    return 'ENC-' + ''.join(
-        secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16)
-    )
+    return 'ENC-' + ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(16))
+
+def safe_str(v):
+    """None values Firebase mein error deta hai — empty string do."""
+    return str(v or '').strip()
 
 def check(k, app_id, device_id):
     k         = clean(k)
-    app_id    = str(app_id or '').strip()
-    device_id = str(device_id or '').strip()
-
+    app_id    = safe_str(app_id)
+    device_id = safe_str(device_id)
     if not k or not app_id or not device_id:
         return False, 'missing_fields', None
-
-    lic = get_license(k)
+    lic = get_lic(k)
     if not lic:
         return False, 'invalid_license', None
     if lic.get('revoked') is True:
         return False, 'revoked', lic
-    expires = int(lic.get('expires_at', 0) or 0)
-    if expires and now_ms() >= expires:
+    if int(lic.get('expires_at', 0) or 0) and now_ms() >= int(lic['expires_at']):
         return False, 'expired', lic
-    if str(lic.get('app_id', '') or '') and lic.get('app_id') != app_id:
+    if safe_str(lic.get('app_id')) and lic.get('app_id') != app_id:
         return False, 'app_mismatch', lic
-
     devices = lic.get('devices') or {}
-    limit   = int(lic.get('max_devices', 1))
+    limit   = int(lic.get('max_devices', 1) or 1)
     if device_id not in devices:
         if limit != 0 and len(devices) >= limit:
             return False, 'device_limit', lic
         devices[device_id] = {'bound_at': now_ms()}
         db.reference(f'licenses/{kid(k)}').update({'devices': devices})
-
     return True, 'ok', lic
 
-# ── Public endpoints ──────────────────────────────────────────────────────────
+def make_rec(days, limit, app_id, owner_id=''):
+    """Safe Firebase record — koi None value nahi."""
+    created = now_ms()
+    return {
+        'app_id':            safe_str(app_id) or 'default',
+        'created_at':        created,
+        'expires_at':        created + int(days) * 86400000,
+        'max_devices':       int(limit),
+        'revoked':           False,
+        'devices':           {},
+        'owner_telegram_id': safe_str(owner_id),
+    }
+
+# ── Public ────────────────────────────────────────────────────────────────────
 @app.get('/')
 def home():
     return jsonify(ok=True, service='license-api', database='firebase-realtime-database')
@@ -116,102 +120,74 @@ def verify():
         max_devices=lic.get('max_devices'),
     )
 
-# ── User endpoints (x-bot-secret) ────────────────────────────────────────────
+# ── User endpoints (bot.py ke liye) ──────────────────────────────────────────
 @app.post('/user/create-key')
 def user_create_key():
-    """Normal user license creation — requires x-bot-secret."""
     if not auth_bot():
         return jsonify(ok=False, error='unauthorized'), 401
-
     d = request.get_json(silent=True) or {}
     try:
-        days  = int(d.get('days', 30))
-        limit = int(d.get('max_devices', 1))
+        days  = max(1, int(d.get('days', 30) or 30))
+        limit = max(0, int(d.get('max_devices', 1) or 1))
     except (TypeError, ValueError):
         return jsonify(ok=False, error='days and max_devices must be integers'), 400
-
-    app_id           = str(d.get('app_id', '') or '').strip()
-    owner_telegram_id = str(d.get('owner_telegram_id', '') or '').strip()
-
-    if days < 1 or limit < 0:
-        return jsonify(ok=False, error='invalid parameters'), 400
-    if not owner_telegram_id:
+    owner_id = safe_str(d.get('owner_telegram_id'))
+    if not owner_id:
         return jsonify(ok=False, error='owner_telegram_id required'), 400
-
-    k       = newkey()
-    created = now_ms()
-    rec = {
-        'app_id':             app_id,
-        'created_at':         created,
-        'expires_at':         created + days * 86400000,
-        'max_devices':        limit,
-        'revoked':            False,
-        'devices':            {},
-        'owner_telegram_id':  owner_telegram_id,
-    }
-    db.reference(f'licenses/{kid(k)}').set(rec)
-    return jsonify(ok=True, license_key=k, **rec), 201
+    try:
+        k   = newkey()
+        rec = make_rec(days, limit, d.get('app_id'), owner_id)
+        db.reference(f'licenses/{kid(k)}').set(rec)
+        return jsonify(ok=True, license_key=k, **rec), 201
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
 
 @app.get('/user/licenses')
 def user_licenses():
-    """List licenses for a specific Telegram user — requires x-bot-secret."""
     if not auth_bot():
         return jsonify(ok=False, error='unauthorized'), 401
-
-    owner_id = str(request.args.get('owner_telegram_id', '') or '').strip()
+    owner_id = safe_str(request.args.get('owner_telegram_id'))
     if not owner_id:
         return jsonify(ok=False, error='owner_telegram_id required'), 400
-
-    all_data = db.reference('licenses').get() or {}
+    try:
+        all_data = db.reference('licenses').get() or {}
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
     result = []
     for doc_id, lic in all_data.items():
-        if not isinstance(lic, dict):
-            continue
-        if str(lic.get('owner_telegram_id', '') or '') == owner_id:
-            # Find real license key stored in record or reconstruct
+        if isinstance(lic, dict) and safe_str(lic.get('owner_telegram_id')) == owner_id:
             entry = dict(lic)
             entry['id'] = doc_id
-            # license_key field added at creation time
             result.append(entry)
-
     return jsonify(ok=True, count=len(result), licenses=result)
 
-# ── Admin endpoints (x-admin-secret) ─────────────────────────────────────────
+# ── Admin endpoints ───────────────────────────────────────────────────────────
 @app.post('/admin/create-key')
 def create_key():
     if not auth_admin():
         return jsonify(ok=False, error='unauthorized'), 401
-
     d = request.get_json(silent=True) or {}
     try:
-        days  = int(d.get('days', 30))
-        limit = int(d.get('max_devices', 1))
+        days  = max(1, int(d.get('days', 30) or 30))
+        limit = max(0, int(d.get('max_devices', 1) or 1))
     except (TypeError, ValueError):
         return jsonify(ok=False, error='days and max_devices must be integers'), 400
-
-    app_id = str(d.get('app_id', '') or '').strip()
-    if days < 1 or limit < 0:
-        return jsonify(ok=False, error='invalid parameters'), 400
-
-    k       = newkey()
-    created = now_ms()
-    rec = {
-        'app_id':            app_id,
-        'created_at':        created,
-        'expires_at':        created + days * 86400000,
-        'max_devices':       limit,
-        'revoked':           False,
-        'devices':           {},
-        'owner_telegram_id': str(d.get('owner_telegram_id', '') or '').strip(),
-    }
-    db.reference(f'licenses/{kid(k)}').set(rec)
-    return jsonify(ok=True, license_key=k, **rec), 201
+    try:
+        k   = newkey()
+        rec = make_rec(days, limit, d.get('app_id'), d.get('owner_telegram_id'))
+        db.reference(f'licenses/{kid(k)}').set(rec)
+        return jsonify(ok=True, license_key=k, **rec), 201
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
 
 @app.get('/admin/status/<key>')
 def status(key):
     if not auth_admin():
         return jsonify(ok=False, error='unauthorized'), 401
-    lic = get_license(key)
+    try:
+        lic = get_lic(key)
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
     if not lic:
         return jsonify(ok=False, error='not_found'), 404
     return jsonify(ok=True, license_key=clean(key), **lic)
@@ -220,34 +196,46 @@ def status(key):
 def revoke(key):
     if not auth_admin():
         return jsonify(ok=False, error='unauthorized'), 401
-    if not get_license(key):
-        return jsonify(ok=False, error='not_found'), 404
-    db.reference(f'licenses/{kid(key)}').update({'revoked': True, 'revoked_at': now_ms()})
+    try:
+        if not get_lic(key):
+            return jsonify(ok=False, error='not_found'), 404
+        db.reference(f'licenses/{kid(key)}').update({'revoked': True, 'revoked_at': now_ms()})
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
     return jsonify(ok=True, license_key=clean(key), revoked=True)
 
 @app.post('/admin/unrevoke/<key>')
 def unrevoke(key):
     if not auth_admin():
         return jsonify(ok=False, error='unauthorized'), 401
-    if not get_license(key):
-        return jsonify(ok=False, error='not_found'), 404
-    db.reference(f'licenses/{kid(key)}').update({'revoked': False, 'unrevoked_at': now_ms()})
+    try:
+        if not get_lic(key):
+            return jsonify(ok=False, error='not_found'), 404
+        db.reference(f'licenses/{kid(key)}').update({'revoked': False, 'unrevoked_at': now_ms()})
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
     return jsonify(ok=True, license_key=clean(key), revoked=False)
 
 @app.post('/admin/reset-devices/<key>')
 def reset_devices(key):
     if not auth_admin():
         return jsonify(ok=False, error='unauthorized'), 401
-    if not get_license(key):
-        return jsonify(ok=False, error='not_found'), 404
-    db.reference(f'licenses/{kid(key)}').update({'devices': {}, 'devices_reset_at': now_ms()})
+    try:
+        if not get_lic(key):
+            return jsonify(ok=False, error='not_found'), 404
+        db.reference(f'licenses/{kid(key)}').update({'devices': {}, 'devices_reset_at': now_ms()})
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
     return jsonify(ok=True, license_key=clean(key), devices={})
 
 @app.get('/admin/list')
 def list_keys():
     if not auth_admin():
         return jsonify(ok=False, error='unauthorized'), 401
-    data = db.reference('licenses').get() or {}
+    try:
+        data = db.reference('licenses').get() or {}
+    except Exception as e:
+        return jsonify(ok=False, error=f'firebase_error: {str(e)[:200]}'), 500
     licenses = []
     for doc_id, lic in data.items():
         if isinstance(lic, dict):
@@ -259,15 +247,14 @@ def list_keys():
 # ── Error handlers ────────────────────────────────────────────────────────────
 @app.errorhandler(405)
 def method_not_allowed(e):
-    return jsonify(ok=False, error='method_not_allowed',
-                   allowed=list(e.valid_methods or [])), 405
+    return jsonify(ok=False, error='method_not_allowed', allowed=list(e.valid_methods or [])), 405
 
 @app.errorhandler(404)
-def not_found(e):
+def not_found_handler(e):
     return jsonify(ok=False, error='not_found'), 404
 
 @app.errorhandler(500)
 def server_error(e):
-    return jsonify(ok=False, error='internal_server_error'), 500
+    return jsonify(ok=False, error='internal_server_error', detail=str(e)[:200]), 500
 
 application = app
