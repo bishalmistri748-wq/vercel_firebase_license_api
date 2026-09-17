@@ -12,26 +12,26 @@ ADMIN_SECRET   = os.environ.get('ADMIN_SECRET', 'sz7rEmsBrld9RSzRPl4MkFNom17xIpS
 BOT_API_SECRET = os.environ.get('BOT_API_SECRET', 'oSoUSURijE1-DC05Au8Z1sJiePeSzdgpua3Ca-I3UW_-LVlAGxJz-eRAABYFEUB6').strip()
 
 # Firebase credentials
-# Automatically load the service-account JSON placed beside this index.py.
-# FIREBASE_SERVICE_ACCOUNT_JSON environment variable still takes priority.
+# Automatically use the service-account JSON embedded below.
+# FIREBASE_SERVICE_ACCOUNT_JSON environment variable still takes priority. Embedded credentials are used when it is not set.
 _SA_JSON = os.environ.get('FIREBASE_SERVICE_ACCOUNT_JSON', '').strip()
 if _SA_JSON:
     try:
         FIREBASE_SERVICE_ACCOUNT_JSON = json.loads(_SA_JSON)
     except Exception as e:
         raise RuntimeError('Invalid FIREBASE_SERVICE_ACCOUNT_JSON') from e
+# Service-account credentials are embedded here so no separate JSON file is required.
+# The credential values below come from the provided Firebase service-account file.
+# Keep this file private because it contains a private key.
 else:
-    _SA_FILE = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
-        'gfxtool-bb32f-firebase-adminsdk-70hn7-440af8a6f8.json'
-    )
-    if not os.path.isfile(_SA_FILE):
-        raise RuntimeError(
-            'Firebase service-account JSON not found: ' + _SA_FILE
-        )
-    with open(_SA_FILE, 'r', encoding='utf-8') as _f:
-        FIREBASE_SERVICE_ACCOUNT_JSON = json.load(_f)
-
+    FIREBASE_SERVICE_ACCOUNT_JSON = {
+        'type': 'service_account', 'project_id': 'gfxtool-bb32f',
+        'private_key_id': '440af8a6f85d7dd4d2af263339e60ca55fe3aa31', 'private_key': '-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQC12YN8iMCAytkk\nwmoypMBJhko50yU9DogYbW/Gyt82L7xhIWlS6d3FKSTe2H+nLyorgthOKy7TCr2q\nqCy24KQGeqE/vwnKWqq/G38aDlsmA2O916ODpYMnqYl3KvzCIRdsBbtJEh/9dXiH\n2Icdh4h1kS0Y0ot4P74/uK1xb69LKUYtTbQA5h2cuOcoVJK+vAAWDMd57cAat76o\n5PfJN34rWMFTfOrhFP0N+W2GsR2oYFr40hDwNkkljUXnW3TeaP2Bz7Q3y3oAzvMe\nsEUB9HmquFLtSNecSVorxqw7UOaO+VVb5OxNcZUx3e1SZ26v/Yp7ogrpNx9MQTsF\n4nJagOq5AgMBAAECggEAD3k1K30VaEAabvrN/4YuSHNRUI9LXWElqnJxbuhnStyP\n+nHV3PTCZprkJMQmRIsKWw50ql4ZS2LgFavetibyPgzkOKDgS+QgIEfOLmDnV5o1\nO/uj0bldKhxOcqHpRPl83Te1oneU2kPLIEAH6zbToTFbtX+A15gQ76oetAbNUydI\nsLw68hP4bSvmSy+1WuThm0KlDzgwrYlGLOOKXXV25s4CS9WbgrlOt2/J98+9U4Lf\nB+zPimacfLNkfWC9PKNO1YXZZttGhhDW8CYUWDWPylOGvPsaRKMdO9CVxkbjt5x+\nEUoTcy7cwMPo60T9JK64l/XBTF4GXyHJzKXWe2vokwKBgQDfB4BkyHbVaWewwRkG\n1eME8SE71cRUoYeaHB5miEG6yzv7MqGC+ErQvYOkWjTvfB7evRGcGemdk5slp9ny\nOdUfmTFmfjdcod55XhLxBMwcYtdaZW/3VQvyxg4gaTElmOWKVgLtFKA07CsWA57b\n0sKwUnm7NRhKkxahNCWVsdWGOwKBgQDQu5O1/e4fZ9e+jyvpzrc3adxbyh2I3cuY\nzT31rNlgS8G8YVxXtkEqpoMsDX0F+Ee0KEtlMjK86JnE8yET2iYgqkSyXc1vXjAr\n2U/KpSKsBCyrG7iAEb2gvQVvqcmKclxXO5Zas9to37tZK5O9Ivf/wA98ni9ekxor\nWOGmf+6fmwKBgQCknXDS8nNjiW0TNTM3rF7nouKYu2sx3BeuU9rMav241ZDsE67K\ncGEoOPkVMc+og8B1Pq/ku+uGdxAodv+SncUEkZm4wKg0IvWGNz1bz+KngPzap8xA\njfFHu49ptLqluXiS5nE6c+LbrQUQNpPmRGWWpwlaeBH52R721Pp4xs2HSQKBgQDD\nyf7eqaZPfRcoXqFBOa4v4zNYQfh8JhdQZ8wjgpOPuN+rtONqPsFXoULO8oQAMogH\nm/hEntZqzf9Wdvvi5C/5Wd0ANe559S5YIwmuOkGQeoXvphvkvT9S45qSx/8MxwKI\nrJL211gKQjo4hSCaO4/GLEAak0I5gt/8Iu3eQIfy2wKBgQCC3IjFaobn6b55DSV/\nmuOsx8NgS36GpXxA9I5LGr1M6IPAAfhafXS9CAjAHCrbvnp9naSB+tYLAPSuhw4g\noOO/VRPb7FpO+xc8KAyqw9RPlqLbLlitxNhIxDDk7f9h51N+iSDfB2rN9EKuk2Wn\nwnPOQslFpD6G4g5EY6VgIHbwYg==\n-----END PRIVATE KEY-----\n',
+        'client_email': 'firebase-adminsdk-70hn7@gfxtool-bb32f.iam.gserviceaccount.com', 'client_id': '113521204726986896638',
+        'auth_uri': 'https://accounts.google.com/o/oauth2/auth', 'token_uri': 'https://oauth2.googleapis.com/token',
+        'auth_provider_x509_cert_url': 'https://www.googleapis.com/oauth2/v1/certs', 'client_x509_cert_url': 'https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-70hn7%40gfxtool-bb32f.iam.gserviceaccount.com',
+        'universe_domain': 'googleapis.com'
+    }
 if not firebase_admin._apps:
     firebase_admin.initialize_app(
         credentials.Certificate(FIREBASE_SERVICE_ACCOUNT_JSON),
